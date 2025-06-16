@@ -1,0 +1,13 @@
+*.aux
+*.log
+*.tex
+*.out
+*~
+\#*
+.#*
+.Rhistory
+Rplots.pdf
+*.Rout
+*.rda
+*.html
+*_plotly_*.png
