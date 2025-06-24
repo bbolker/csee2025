@@ -1,3 +1,6 @@
+## expand a binomial data set into a bernoulli data set
+## scam doesn't handle binomial (N>1) data properly
+##   https://cran.r-project.org/web/packages/scam/ChangeLog
 expand_bern <- function(dd, response = "y1", size = 20) {
     dd[["..size"]] <- if (is.numeric(size)) size else dd[[size]]
     L <- apply(dd, 1,
@@ -21,39 +24,56 @@ mk_mpd_fun <- function(data, parms, random = "b1", silent = TRUE,
                        family = "gaussian", ...) {
     ## can't use %~% format if we want to add a penalty
     f <- function(parms) {
-        getAll(data, parms)
-        b_pos <- b1
-        b_pos[p.ident] <- exp(b1[p.ident])
-        eta <- b0 + X %*% b_pos
-        nll <- 0
-        mu <- switch(family,
-                     gaussian = eta,
-                     binomial = plogis(eta),
-                     stop("unimplemented family"))
-        for (i in 1:length(y)) {
-            if (!is.na(y[i])) {
-                nll <- nll  + switch(family,
-                                     gaussian = -1*dnorm(y[i], mu[i], exp(log_rSD), log = TRUE),
-                                     binomial = -1*dbinom_robust(y[i], logit_p = eta[i],
-                                                                 size = size[i], log = TRUE))
-            }
+      getAll(data, parms)
+      OBS(y)
+      b_pos <- b1
+      b_pos[p.ident] <- exp(b1[p.ident])
+
+      ## compute penalty first, for simulation purposes
+      ## translate from:
+      ##   lambda = 1/sigma_sm^2
+      ##   MVgauss NLL = (1/2) (n*log(2pi) + log(det(Sigma)) + bT Sigma^{-1} b)
+      ##   Sigma = sd^2 S^{-1}
+      ##   log(det(Sigma)) = 2*logsd - log(det(S))
+      ##   MVNLL = C + logsd + 1/(2*sd^2) (bT S b)
+      ##   (ignoring C = constant log(det(S)) + f(pi))
+      pen <- (exp(-2*log_smSD) * (t(b_pos) %*% S %*% b_pos) + 2*log_smSD)/2
+
+      eta <- drop(b0 + X %*% b_pos)
+      nll <- 0
+      for (i in 1:length(y)) {
+        if (!is.na(y[i])) {
+          nll <- nll  +
+            switch(family,
+                   gaussian = -1*dnorm(y[i], eta[i], exp(log_rSD), log = TRUE),
+                   binomial = -1*dbinom_robust(y[i], logit_p = eta[i],
+                                               size = size[i], log = TRUE))
         }
-        ## translate from
-        ## lambda = 1/sigma_sm^2
-        ## MVgauss NLL = (1/2) (n*log(2pi) + log(det(Sigma)) + bT Sigma^{-1} b)
-        ## Sigma = sd^2 S^{-1}
-        ## log(det(Sigma)) = 2*logsd - log(det(S))
-        ## MVNLL = C + logsd + 1/sd^2 (bT S b)
-        pen <- (exp(-2*log_smSD) * (t(b_pos) %*% S %*% b_pos) + 2*log_smSD)/2
-        REPORT(mu)
-        ADREPORT(mu)
-        REPORT(eta)
-        ADREPORT(eta)
-        nll + pen
+      }
+      ## for reporting purposes
+      mu <- switch(family,
+                   gaussian = eta,
+                   binomial = plogis(eta),
+                   stop("unimplemented family"))
+
+      REPORT(mu)
+      ADREPORT(mu)
+      REPORT(eta)
+      ADREPORT(eta)
+      nll + pen
     }
-    MakeADFun(f, parms, random=random, silent = silent, ...)
+  ret <- my_MakeADFun(f, parms, random=random, silent = silent, ...)
+  class(ret) <- c("TMB", class(ret))
+  return(ret)
 }
 
+my_MakeADFun <- function(...) {
+  cc <- match.call()
+  res <- eval.parent(MakeADFun(...))
+  res$call <- cc
+  res
+}
+  
 #' @param data data frame including response variable ('y' by default) and predictor/x variable ('x')
 #' @param response name of response variable/data column
 #' @param xvar name of predictor variable/data column
@@ -86,7 +106,7 @@ fit_mpd_fun <- function(data,
     parms <- parms %||% list(
                             b0 = 0,
                             b1 = rep(0, ncol(sm1$X)),
-                            log_smSD = 0)
+                            log_smSD = 2)
     if (family == "gaussian") parms <- c(parms, list(log_rSD = 0))
     data$y <- data[[response]]
     tmbdat <- c(as.list(data),
@@ -99,13 +119,14 @@ fit_mpd_fun <- function(data,
     ## optim(par = p0, fn = obj$fn, control = list(maxit = 2000))
     if (predict) {
         ## shouldn't need to map() b since we are using best-fit  if random = NULL ?
-        ## if (!is.null(random)) parms <- parms[setdiff(names(parms), random)]
+        if (!is.null(random)) parms <- parms[setdiff(names(parms), random)]
         obj$fn(unlist(parms))
         if (se.fit) {
             sdr <- sdreport(obj)
             return(with(sdr,
                         data.frame(nm = names(value), value, sd)))
         } else {
+          stop("not implemented")
         }
     }
     res <- with(obj,
@@ -115,6 +136,11 @@ fit_mpd_fun <- function(data,
                        stop("unknown optimizer ", opt))
                 )
     ret <- list(fit = res, obj = obj, mu = obj$report()$mu, eta = obj$report()$eta)
+
+    ## TRY HARDER HERE?
+    zero_pars <- which(tmbdat$p.ident & exp(obj$env$parList()[["b1"]]) < 1e-6)
+
+    
     class(ret) <- c("myRTMB", "list")
     return(ret)
 }

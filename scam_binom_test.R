@@ -1,3 +1,11 @@
+## NOTES:
+## headed down a bit of a rabbit hole right now.
+## Fairly straightforward to show that scam with bs = "mpd" and
+##  binomial (N>1) data doesn't actually respect the constraints,
+##  but RTMB with "tp" basis (which should be OK) is not behaving at the moment ...
+
+## everything below is also slightly in disarray as I try to modularize/DRY everything
+
 library(RTMB)
 library(glmmTMB)
 library(scam)
@@ -9,46 +17,78 @@ if (!interactive()) pdf("scam_binom_test.pdf")
 set.seed(101)
 dd <- data.frame(x=seq(-5, 5, length = 101))
 dd <- within(dd, {
-             p <- plogis(1 + x - x^3/4)
-             y0 <- rbinom(nrow(dd), size = 1, prob = p)
-             y1 <- rbinom(nrow(dd), size = 20, prob = p)
-             })
+  p <- plogis(1 + x - x^3/4)
+  ## Bernoulli outcomes
+  y0 <- rbinom(nrow(dd), size = 1, prob = p)
+  ## binomial (N==20) outcomes
+  y1 <- rbinom(nrow(dd), size = 20, prob = p)
+})
 
 par(las = 1, bty = "l") ## cosmetic
 colvec <- c(2,4:6, 8:9)
+ltyvec <- 1:5
 
-## ONLY works without Laplace approx ... maybe OK to proceed for now?
-m_bern_RTMB <- fit_mpd_fun(dd, size = rep(1, nrow(dd)), family = "binomial", response = "y0",
-                           random = NULL,
-                           ## random = "b1",
-                           parms = list(b0 = 0, log_smSD = 3, b1 = rep(0, 9)))
+#' @param response response (y0 = Bernoulli, y1 = binomial)
+fit_all <- function(response = c("bernoulli", "binomial"),
+                    basis = "tp") {
+  response <- match.arg(response)
+  if (response == "bernoulli") {
+    size <- rep(1, nrow(dd))
+    RTMBresp <- gamresp <- "y0"
+  } else {
+    size <- rep(20, nrow(dd))
+    RTMBresp <- "y1"
+    gamresp <- "cbind(y1, 20-y1)"
+  }
+  gamform <- reformulate("s(x, bs = 'tp')", response = gamresp)
+  scamform <- reformulate(sprintf("s(x, bs = '%s')", basis), response = gamresp)
 
-## all approaches behave similarly for Bernoulli data
-## scam only does GCV, glmmTMB only does ML/REML
-m_bern_gam_gcv <- gam(y0 ~ s(x, bs = "tp"), family = binomial, data = dd,
-                      method = "GCV.Cp")
-m_bern_gam_reml <- gam(y0 ~ s(x, bs = "tp"), family = binomial, data = dd,
-                       method = "REML")
-m_bern_scam <- scam(y0 ~ s(x, bs = "tp"), family = binomial, data = dd)
-m_bern_glmmTMB <- glmmTMB(y0 ~ s(x, bs = "tp"), family = binomial, data = dd,
-                          REML = TRUE)
+  m_RTMB <- suppressWarnings(
+    fit_mpd_fun(dd,
+                ## evaluation of form is weird, try it this way ...
+                form = if (basis == "tp") s(x, bs = "tp") else s(x, bs = "mpd"),
+                size = size, 
+                family = "binomial",
+                response = RTMBresp,
+                random = "b1",
+                parms = list(b0 = 0, log_smSD = 3, b1 = rep(0, 9)))
+  )
+  m_gam_gcv <-  gam(gamform, family = binomial, data = dd, method = "GCV.Cp")
+  m_gam_reml <- gam(gamform, family = binomial, data = dd, method = "REML")
+  m_scam <-     scam(scamform, family = binomial, data = dd)
+  m_glmmTMB <-  glmmTMB(gamform, family = binomial, data = dd, REML = TRUE)
+  nm0 <- ls(pattern = "m_.*")
+  nm <- nm0 |> gsub(pattern = "^m_", replacement = "")
+  predmat <- mget(nm0) |> lapply(predict) |> do.call(what=cbind)
+  colnames(predmat) <- nm
+  return(predmat)
+}
 
-nm0 <- ls(pattern = "m_bern_.*")
-nm <- nm0 |> gsub(pattern = "^m_", replacement = "")
-predmat_bern <- mget(nm0) |> lapply(predict) |> do.call(what=cbind)
-colnames(predmat_bern) <- nm
+leg_names <- function(basis = "tp") {
+  c("gam/GCV/tp", "gam/REML/tp", "glmmTMB/REML/tp", sprintf(c("RTMB/REML/%s", "scam/UBRE/%s"), basis))
+}
+add_true <- function() lines(dd$x, qlogis(dd$p), lwd = 2)
+add_rug <- function() {
+  rug(dd$x[dd$y0==0], ticksize = 0.1, side = 1)
+  rug(dd$x[dd$y0==1], ticksize = 0.1, side = 3)
+}
 
-matplot(dd$x, predmat_bern, lty = 1:4, col = colvec)
-legend(lty = 1, lwd = 2,
-       col = colvec[1:4],
-       x = 1.5, y = 8,
-       legend = c("gam/GCV", "gam/REML", "scam/GCV", "glmmTMB/REML"))
+predmat_bern_tp <- fit_all()
+matplot(dd$x, predmat_bern_tp, lty = ltyvec, col = colvec, type = "l", lwd = 2)
+## RTMB way overfits -- undersmoothed??
+legend(lwd = 2,
+       lty = ltyvec,
+       col = colvec,
+       "right",
+       legend = leg_names())
 
-lines(dd$x, qlogis(dd$p), lwd = 2)
-rug(dd$x[dd$y0==0], ticksize = 0.1, side = 1)
-rug(dd$x[dd$y0==1], ticksize = 0.1, side = 3)
+
 ## results are heavily smoothed relative to true prob, but not surprising given
 ## v. low-resolution data
+
+## zoom in so we can confirm that RTMB, scam do in fact preserve monotonicity:
+matplot(dd$x, predmat_bern, lty = 1:4, col = colvec, type = "l", lwd = 2, xlim = c(-3, 3), ylim = c(-5, 5))
+lines(dd$x, qlogis(dd$p), lwd = 2)
 
 m_binom_gam_gcv <- gam(cbind(y1, 20-y1) ~ s(x, bs = "tp"), family = binomial, data = dd,
                       method = "GCV.Cp")
