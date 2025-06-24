@@ -1,5 +1,6 @@
 ## new
 
+* slide 5: cartoons of monononic/unimodal/convex/concave
 * cleanup: move data to `data/` ?
 * 'model fits to per capita pred': improve facet names; don't need identical RTMB + mle2 holling fits. Understand RTMB2 vs scam discrepancies???
 * expand to thermal performance curves??? (would like 'unimodal' constraint -- how? settle for concave down?)

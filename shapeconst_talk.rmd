@@ -164,6 +164,7 @@ pfun(sm1$X, "Monotonic p-spline")
 * data + Holling type 2 fit
 
 ```{r get_rf}
+## from reedfrog.R
 L <- load("reedfrog_stuff.rda")
 ```
 

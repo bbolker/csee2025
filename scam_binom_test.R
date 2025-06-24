@@ -6,6 +6,10 @@
 
 ## everything below is also slightly in disarray as I try to modularize/DRY everything
 
+## check glmmTMB vs RTMB
+##  glmmTMB converts smooth2random (maybe not possible for scam bases?)
+##  
+
 library(RTMB)
 library(glmmTMB)
 library(scam)
@@ -72,23 +76,28 @@ add_rug <- function() {
   rug(dd$x[dd$y0==0], ticksize = 0.1, side = 1)
   rug(dd$x[dd$y0==1], ticksize = 0.1, side = 3)
 }
+add_legend <- function(leg_pos) {
+  legend(lwd = 2, lty = ltyvec, col = colvec, legend = leg_names(), x = leg_pos)
+}
+plotfun <- function(predmat, ..., truth = TRUE, legend = TRUE, rug = TRUE, leg_pos = "right") {
+  matplot(dd$x, predmat, lty = ltyvec, col = colvec, type = "l", lwd = 2, ...)
+  if (truth) add_true()
+  if (legend) add_legend(leg_pos)
+  if (rug) add_rug()
+}
 
+## RTMB is wonky with bs = "tp" (why?)
 predmat_bern_tp <- fit_all()
-matplot(dd$x, predmat_bern_tp, lty = ltyvec, col = colvec, type = "l", lwd = 2)
-## RTMB way overfits -- undersmoothed??
-legend(lwd = 2,
-       lty = ltyvec,
-       col = colvec,
-       "right",
-       legend = leg_names())
+plotfun(predmat_bern_tp, ylim = c(-10, 10), leg_pos = "topright")
 
-
-## results are heavily smoothed relative to true prob, but not surprising given
-## v. low-resolution data
+## scam, RTMB results reasonable (but different) with "mpd"
+predmat_bern_mpd <- fit_all(basis = "mpd")
+plotfun(predmat_bern_mpd)
 
 ## zoom in so we can confirm that RTMB, scam do in fact preserve monotonicity:
-matplot(dd$x, predmat_bern, lty = 1:4, col = colvec, type = "l", lwd = 2, xlim = c(-3, 3), ylim = c(-5, 5))
-lines(dd$x, qlogis(dd$p), lwd = 2)
+plotfun(predmat_bern_mpd, ylim = c(-5, 5), leg_pos = "bottomleft")
+
+## TO DO: binomial fits ...
 
 m_binom_gam_gcv <- gam(cbind(y1, 20-y1) ~ s(x, bs = "tp"), family = binomial, data = dd,
                       method = "GCV.Cp")

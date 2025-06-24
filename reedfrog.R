@@ -135,7 +135,9 @@ rf_predfun <- function(fit, newdata = dnew, olddata = dd, ci_level = 0.95, rando
 
 preds_RTMB_mpd <- rf_predfun(m_RTMB_mpd)
 ## FIXME: still need to sort out warning messages
-preds_RTMB2_mpd <- rf_predfun(m_RTMB2_mpd, random = "b1",  inner.control = list(smartsearch=FALSE, maxit =1))
+preds_RTMB2_mpd <- rf_predfun(m_RTMB2_mpd,
+                              random = "b1",
+                              inner.control = list(smartsearch=FALSE, maxit =1))
 
 m_scam_mpd <- scam(Killed ~ s(Initial, bs = "mpd"), data = ddx, family = binomial)
 
@@ -246,6 +248,9 @@ pred_fix <- purrr::map_dfr(setNames(sdvec, sdvec),
                get_mpd_fix_preds,
                .id = "log_smSD") |> mutate(across(log_smSD, as.numeric))
 
+## can do pred with higher log_smSD, just can't get SEs
+## (non-pos-def Hessian, presumably)
+plot(prob ~ Initial, get_mpd_fix_preds(6))
 print(pred_plot(log_smSD, pred_fix))
 
 if (!interactive()) dev.off()
