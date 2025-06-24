@@ -75,7 +75,7 @@ fit_semimech_fun <- function(data,
                        stop("unknown optimizer ", opt))
                 )
     ret <- c(list(fit = res, obj = obj), obj$report())
-    class(ret) <- c("myRTMB", "list")
+    class(ret) <- c("RTMB", "list")
     return(ret)
 }
     

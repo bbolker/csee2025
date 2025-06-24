@@ -1,6 +1,9 @@
-## expand a binomial data set into a bernoulli data set
-## scam doesn't handle binomial (N>1) data properly
-##   https://cran.r-project.org/web/packages/scam/ChangeLog
+#' expand a binomial data set into a bernoulli data et
+#' (scam doesn't handle binomial (N>1) data properly:
+#' see scam_binom_test.R)
+#' @param dd data frame containing a binomial (N>1 response variable
+#' @param response name of response variable
+#' @param size (integer) numeric value or (character) name of size column
 expand_bern <- function(dd, response = "y1", size = 20) {
     dd[["..size"]] <- if (is.numeric(size)) size else dd[[size]]
     L <- apply(dd, 1,
@@ -14,6 +17,12 @@ expand_bern <- function(dd, response = "y1", size = 20) {
     return(ret)
 }
 
+#' negative log-likelihood function for a univariate spline model, intended for RTMB
+#' @details `data` list (in environment) should include (at least?)
+#' * `p.ident` positions of parameters to be exponentiated
+#' * `X` model matrix
+#' * `S` penalty matrix
+#' * `size` binomial denominator vector
 #' @param data
 #' @param parms parameters
 #' @param random smooth variable(s)
@@ -62,14 +71,21 @@ mk_mpd_fun <- function(data, parms, random = "b1", silent = TRUE,
       ADREPORT(eta)
       nll + pen
     }
-  ret <- my_MakeADFun(f, parms, random=random, silent = silent, ...)
+  ## n.b. neem to name all args so update/MakeADFun will work ...
+  ## FIXME: better to use args(MakeADFun) instead?
+  ret <- MakeADFun(func = f, parameters = parms, random=random, silent = silent, ...)
   class(ret) <- c("TMB", class(ret))
   return(ret)
 }
 
-my_MakeADFun <- function(...) {
+#' wrapper for RTMB::MakeADFun that includes a call component
+#' (to enable use of `update()`)
+#' @param ... arguments to pass to MakeADFun
+MakeADFun <- function(...) {
   cc <- match.call()
-  res <- eval.parent(MakeADFun(...))
+  res <- eval.parent(RTMB::MakeADFun(...))
+  L <- list(...)
+  for (x in names(L)) assign(x, get(x, L), environment(MakeADFun))
   res$call <- cc
   res
 }
@@ -103,11 +119,17 @@ fit_mpd_fun <- function(data,
     form$term <- xvar
     ## if predicting, make sure to pass old knots so basis is constructed properly
     sm1 <- smoothCon(form, data = data, absorb.cons = TRUE, knots = knots)[[1]]
-    parms <- parms %||% list(
-                            b0 = 0,
-                            b1 = rep(0, ncol(sm1$X)),
-                            log_smSD = 2)
-    if (family == "gaussian") parms <- c(parms, list(log_rSD = 0))
+    def_parms <- list(b0 = 0,
+                      b1 = rep(0, ncol(sm1$X)),
+                      log_smSD = 2)
+    if (!is.null(parms)) {
+      for (nm in setdiff(names(parms), "log_rSD")) def_parms[[nm]] <- parms[[nm]]
+    }
+    if (family == "gaussian") {
+      def_parms[["log_rSD"]] <- parms[["log_rSD"]] %||% 0
+    }
+    parms <- def_parms
+
     data$y <- data[[response]]
     tmbdat <- c(as.list(data),
                 list(size = size, family = family),
@@ -137,16 +159,16 @@ fit_mpd_fun <- function(data,
                 )
     ret <- list(fit = res, obj = obj, mu = obj$report()$mu, eta = obj$report()$eta)
 
-    ## TRY HARDER HERE?
+    ## TRY HARDER HERE? i.e., map these parameters to a small (i.e. large-magnitude negative) value
+    ##  and re-fit?
     zero_pars <- which(tmbdat$p.ident & exp(obj$env$parList()[["b1"]]) < 1e-6)
-
     
-    class(ret) <- c("myRTMB", "list")
+    class(ret) <- c("RTMB", "list")
     return(ret)
 }
 
 
-predict.myRTMB <- function(x, type = "link", ...)  {
+predict.RTMB <- function(x, type = "link", ...)  {
     switch(type,
            link = x$eta,
            response = x$mu)
@@ -255,7 +277,7 @@ get_info <- function(fit, newdata = dd, init_dens = "N", killed = "killed", pred
         pp <- drop(predict(fit, newdata = newdata, type = "response"))
         nll <- -sum(dbinom(newdata[[killed]], size = newdata[[init_dens]], prob = pp, log = TRUE))
         AIC <- 2*(nll + df)
-    } else if (inherits(fit, "myRTMB")) {
+    } else if (inherits(fit, "RTMB")) {
         pp <- fit[[predresp]]
         nll <- -sum(dbinom(newdata[[killed]], size = newdata[[init_dens]], prob = pp, log = TRUE))
         df <- NA
