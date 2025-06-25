@@ -1,14 +1,25 @@
 ## new
 
-* slide 5: cartoons of monononic/unimodal/convex/concave
-* cleanup: move data to `data/` ?
+### cosmetic
+
 * rename models in AIC table 
-* expand to thermal performance curves??? (would like 'unimodal' constraint -- how? settle for concave down?)
-* fix?? Laplace instabilities?
-* tmbstan results???
-* improve reflist CSL, e.g. "Pya and Wood" vs "Pya et al"
-* pix, natural history background for reed frogs/red-eyed tree frogs (pred, prey)
 * improve captions for plotly figs
+* slide 5: cartoons of monononic/unimodal/convex/concave
+* pix, natural history background for reed frogs/red-eyed tree frogs (pred, prey)
+* improve reflist CSL, e.g. "Pya and Wood" vs "Pya et al"
+
+### organizational
+
+* cleanup: move data to `data/` ?
+
+### significant
+
+* expand to thermal performance curves??? (would like 'unimodal' constraint -- how? settle for concave down?)
+* study Laplace instabilities (fixed sigma/no RE/bounds on nlminb) ?
+* drop RTMB waterbug version?
+* compute implied a/h curves?
+* `mgcv::vcov.gam(m_scam_mpd)` (maybe dangerous, don't know about transformations?)
+
 
 ## to do (OLD, from ISEC 2024)
 
