@@ -78,17 +78,19 @@ mk_mpd_fun <- function(data, parms, random = "b1", silent = TRUE,
   return(ret)
 }
 
+## commented out, this is too clever: would like to use update(),
+##   but too much environment hacking is needed
 #' wrapper for RTMB::MakeADFun that includes a call component
 #' (to enable use of `update()`)
 #' @param ... arguments to pass to MakeADFun
-MakeADFun <- function(...) {
-  cc <- match.call()
-  res <- eval.parent(RTMB::MakeADFun(...))
-  L <- list(...)
-  for (x in names(L)) assign(x, get(x, L), environment(MakeADFun))
-  res$call <- cc
-  res
-}
+## MakeADFun <- function(...) {
+##   cc <- match.call()
+##   res <- eval.parent(RTMB::MakeADFun(...))
+##   L <- list(...)
+##   for (x in names(L)) assign(x, get(x, L), environment(MakeADFun))
+##   res$call <- cc
+##   res
+## }
   
 #' @param data data frame including response variable ('y' by default) and predictor/x variable ('x')
 #' @param response name of response variable/data column
@@ -115,6 +117,8 @@ fit_mpd_fun <- function(data,
                         silent = TRUE,
                         opt = "nlminb",
                         se.fit = TRUE,
+                        nlopt.args = list(),
+                        lower = -Inf,
                         ...) {
     form$term <- xvar
     ## if predicting, make sure to pass old knots so basis is constructed properly
@@ -153,7 +157,7 @@ fit_mpd_fun <- function(data,
     }
     res <- with(obj,
                 switch(opt,
-                       nlminb =  try(nlminb(par, fn, gr, control = list(eval.max = 1000, iter.max = 1000))),
+                       nlminb =  try(nlminb(par, fn, gr, lower = lower, control = c(list(eval.max = 1000, iter.max = 1000), nlopt.args))),
                        BFGS = try(optim(par, fn, gr, method = "BFGS", control = list(maxit =1000))),
                        stop("unknown optimizer ", opt))
                 )

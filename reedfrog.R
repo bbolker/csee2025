@@ -92,16 +92,40 @@ preds_RTMB_holling <- predict_RTMB_holling2(dd, data.frame(Initial = 1:100),
 ## fit SCAM with RTMB (Laplace approx doesn't work, need random = NULL)
 m_RTMB_mpd <- fit_mpd_fun(data = dd, response = "Killed",
                           size = dd$Initial, xvar = "Initial",
-                          family = "binomial", random = NULL)
-
+                          family = "binomial", random = NULL,
+                          nlopt.args = list(trace = 1))
 
 m_RTMB2_mpd <- fit_mpd_fun(data = dd, response = "Killed",
+                          size = dd$Initial, xvar = "Initial",
+                          family = "binomial", random = "b1",
+                          ## ?TMB::MakeADFun; recommended for 'quadratic'
+                          ##  problems
+                          inner.control = list(smartsearch=FALSE, maxit =1),
+                          nlopt.args = list(x.tol = 1e-2, rel.tol = 1e-2, trace = 1),
+                          opt  = "nlminb")
+
+m_RTMB3_mpd <- fit_mpd_fun(data = dd, response = "Killed",
                           size = dd$Initial, xvar = "Initial",
                           family = "binomial", random = "b1",
                           inner.control = list(smartsearch=FALSE, maxit =1),
                           opt  = "BFGS")
 
-m_RTMB_mpd$fit
+options(warn = 1)
+options(error = recover)
+m_RTMB4_mpd <- fit_mpd_fun(data = dd, response = "Killed",
+                          size = dd$Initial, xvar = "Initial",
+                          family = "binomial", random = "b1",
+                          inner.control = list(smartsearch=FALSE, tol = 1e-3, trace = 1, tol10 = 0.1, maxit = 1),
+                          opt  = "nlminb")
+
+
+## all components except 3, 4 are effectively getting squashed to zero
+
+cbind(m_RTMB3_mpd$obj$env$last.par,
+      m_RTMB2_mpd$obj$env$last.par,
+      c(m_scam_mpd$beta, NA))
+
+m_RTMB_mpd$fit ## false convergence
 m_RTMB2_mpd$fit
 
 
@@ -142,6 +166,8 @@ preds_RTMB2_mpd <- rf_predfun(m_RTMB2_mpd,
 m_scam_mpd <- scam(Killed ~ s(Initial, bs = "mpd"), data = ddx, family = binomial)
 
 preds_scam_mpd <- pfun(m_scam_mpd)
+pp2 <- predict(m_scam_mpd, se.fit = TRUE, newdata = ddp0)
+preds_scam_mpd2 <- with(pp2, tibble(Initial = ddp0$Initial, prob = plogis(fit), lwr = plogis(fit-1.96*se.fit), upr = plogis(fit+1.96*se.fit)))
 
 (all_models <- ls(pattern="^m_"))
 (all_preds <- ls(pattern="^preds_"))

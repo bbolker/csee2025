@@ -87,42 +87,69 @@ add_rug <- function() {
 add_legend <- function(leg_pos, ...) {
   legend(lwd = 2, lty = ltyvec, col = colvec, legend = leg_names(...), x = leg_pos)
 }
-plotfun <- function(predmat, ..., truth = TRUE, legend = TRUE, rug = TRUE, leg_pos = "right", data = dd,
-                    skip_RTMB = FALSE) {
+plotfun <- function(predmat, ...,
+                    truth = TRUE, legend = TRUE, rug = TRUE,
+                    leg_pos = "right", data = dd,
+                    skip_RTMB = FALSE,
+                    basis = "tp",
+                    title = "") {
   matplot(data$x, predmat, lty = ltyvec, col = colvec, type = "l", lwd = 2, ...)
   if (truth) add_true()
-  if (legend) add_legend(leg_pos, skip_RTMB = skip_RTMB)
+  if (legend) add_legend(leg_pos, skip_RTMB = skip_RTMB, basis = basis)
   if (rug) add_rug()
+  title(title)
 }
 
 ## RTMB fit is wonky with bs = "tp" (why????)
 ## DOES depend on starting value? see RTMB_tp_test.R ...
 ## all others agree, nearly
 predmat_bern_tp <- fit_all()
-plotfun(predmat_bern_tp, ylim = c(-10, 10), leg_pos = "bottomleft")
+plotfun(predmat_bern_tp, ylim = c(-10, 10), leg_pos = "bottomleft",
+        title = "Bernoulli, all tp bases")
 
 ## scam, RTMB results reasonable (but different) with "mpd"
 predmat_bern_mpd <- fit_all(basis = "mpd")
-plotfun(predmat_bern_mpd, ylim =c(-10, 10), leg_pos = "bottomleft")
+plotfun(predmat_bern_mpd, ylim =c(-10, 10), leg_pos = "bottomleft",
+        basis = "mpd",
+        title = "Bernoulli, tp/mpd bases")
 
 ## zoom in so we can confirm that RTMB, scam do in fact preserve monotonicity,
 ## and are very similar:
-plotfun(predmat_bern_mpd, ylim = c(-1, 3), leg_pos = "bottomleft")
+plotfun(predmat_bern_mpd, ylim = c(-1, 3), leg_pos = "bottomleft",
+        title = "Bernoulli, tp/mpd bases, zoom",
+        basis = "mpd")
 
 ## scam and RTMB are both a bit wonky
 predmat_binom_tp <- fit_all(response = "binomial")
-plotfun(predmat_binom_tp, ylim = c(-10, 10), leg_pos = "bottomleft")
+plotfun(predmat_binom_tp, ylim = c(-10, 10), leg_pos = "bottomleft",
+        title = "Binomial, tp")
 
 predmat_binom_mpd <- fit_all(response = "binomial", basis = "mpd")
-plotfun(predmat_binom_mpd, ylim = c(-10, 10), leg_pos = "bottomleft")
+plotfun(predmat_binom_mpd, ylim = c(-10, 10), leg_pos = "bottomleft",
+        basis = "mpd",
+        title = "Binomial, tp/md")
 ## zoom in: RTMB, scam give different answers, but neither is horribly wrong
-plotfun(predmat_binom_mpd, ylim = c(-1, 2), leg_pos = "bottomleft")
+plotfun(predmat_binom_mpd, ylim = c(-1, 2), leg_pos = "bottomleft",
+        title = "Binomial, tp/md (zoom)",
+        basis = "mpd")
 
 dd_expand <- expand_bern(dd)
 ## ugh, error
 predmat_bernbinom_mpd <- fit_all(response = "bernoulli", basis = "mpd", data = dd_expand, v = "y1",
                                  skip_RTMB = TRUE)
-plotfun(predmat_bernbinom_mpd, data = dd_expand, ylim = c(-10, 10), skip_RTMB = TRUE, leg_pos = "bottomleft")
+plotfun(predmat_bernbinom_mpd, data = dd_expand, ylim = c(-10, 10), skip_RTMB = TRUE, leg_pos = "bottomleft",
+        title = "Expanded Bernoulli, tpd/md",
+        basis = "mpd")
+
+
+scam_comp <- cbind(binomial = predmat_binom_mpd[,"scam"],
+                   RTMB = predmat_binom_mpd[,"RTMB"],
+                   expanded = predmat_bernbinom_mpd[!duplicated(dd_expand$x), "scam"])
+matplot(scam_comp, type = "l", col = colvec, lwd = 2,
+        ylim = c(-10, 10))
+legend("bottomleft", c("scam_binom", "RTMB_binom", "scam_expand"),
+       col = colvec, lty = 1:3)
+title("scam binom vs scam binom-expanded")
 
 sessionInfo()
 
