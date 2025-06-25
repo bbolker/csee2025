@@ -9,6 +9,8 @@ library(RTMB)
 
 ## for plotly image export (see setup.R)
 reticulate::use_miniconda('r-reticulate')
+## not sure why this is necessary but ...? seems required for plotly export
+invisible(reticulate::py_available(initialize = TRUE))
 
 source("funs.R")
 ## rayshader is disappointing/frustrating

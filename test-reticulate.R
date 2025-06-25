@@ -1,10 +1,14 @@
 library(plotly)
+library(reticulate)
 reticulate::use_miniconda('r-reticulate')
+invisible(py_available(initialize=TRUE))
 library(dplyr)
-
+path.package('reticulate')
+## https://github.com/rstudio/reticulate/issues/385
+## seems to find stuff?
+py_discover_config()
 
 reticulate::py_available() ## why FALSE?
-debug(reticulate::py_available)
 
 datfn <- "McCoy_response_surfaces_Gamboa.csv"
 
@@ -45,4 +49,4 @@ odo_plotly_0 <- (plot_ly(x= ~initial, y = ~size, z = ~prop)
 )
 
 odo_plotly_0
-save_image(odo_plotly_0)
+save_image(odo_plotly_0, "hello.png")
