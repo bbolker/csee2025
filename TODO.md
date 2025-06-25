@@ -2,11 +2,13 @@
 
 * slide 5: cartoons of monononic/unimodal/convex/concave
 * cleanup: move data to `data/` ?
-* 'model fits to per capita pred': improve facet names; don't need identical RTMB + mle2 holling fits. Understand RTMB2 vs scam discrepancies???
+* rename models in AIC table 
 * expand to thermal performance curves??? (would like 'unimodal' constraint -- how? settle for concave down?)
-* AIC/EDF
 * fix?? Laplace instabilities?
 * tmbstan results???
+* improve reflist CSL, e.g. "Pya and Wood" vs "Pya et al"
+* pix, natural history background for reed frogs/red-eyed tree frogs (pred, prey)
+* improve captions for plotly figs
 
 ## to do (OLD, from ISEC 2024)
 
@@ -14,9 +16,6 @@
 
 * tweak RF fits pic: leave out RTMB_holling, rename RTMB2_mpd .. adjust _ to / 
 * turn off SD prediction to speed up redeye_odo fits
-* improve reflist CSL, e.g. "Pya and Wood" vs "Pya et al"
-* pix, natural history background for reed frogs/red-eyed tree frogs (pred, prey)
-* improve captions for plotly figs
 * troubleshoot semimech fit??
 * McMaster logo?
 * improve README

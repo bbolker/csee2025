@@ -56,6 +56,16 @@ options(bitmapType = "cairo")
 ```{r pkgs, message = FALSE}
 library(knitr)
 library(ggplot2); theme_set(theme_bw(base_size=16))
+zmargin <- theme(panel.spacing = grid::unit(0, "lines"))
+OkIt <- unname(palette.colors(n = 9, palette = "Okabe-Ito"))[-6]
+scale_colour_discrete <- function(...) {
+  scale_colour_manual(...,  values = OkIt)
+}
+scale_fill_discrete <- function(...) {
+  scale_fill_manual(...,  values = OkIt)
+}
+
+colvec <- palette.colors(n=8) ## Okabe-Ito
 library(scam)
 library(mgcv)
 library(tidyverse)
@@ -149,9 +159,8 @@ dd <- within(dd, {
 sm0 <- smoothCon(s(x, bs = "tp"), data = dd, absorb.cons = TRUE)[[1]]
 sm1 <- smoothCon(s(x, bs = "mpd"), data = dd, absorb.cons = TRUE)[[1]]
 sm2 <- smoothCon(s(x, bs = "ps"), data = dd, absorb.cons = TRUE)[[1]]
-colvec <- palette.colors(n=8)
 pfun <- function(x, main) {
-    matplot(x, type = "l", main = main, col = colvec, ylab = "", xlab = "",
+    matplot(x, type = "l", main = main, col = OkIt, ylab = "", xlab = "",
             lwd = 2)
 }
 par(mfrow=c(1,2), las = 1, bty = "l")
@@ -183,8 +192,20 @@ ggplot(pf, aes(x = Initial)) +
 
 ## model fits to *per capita* pred
 
-```{r fit-plot, out.width = "100%"}
-pf <- pred_frame |> filter(model != "RTMB_mpd")
+
+```{r scam_ex, eval=FALSE, echo = TRUE}
+scam(Killed ~ s(Initial, bs = "mpd"), family = binomial)
+```
+
+```{r fit-plot, out.width = "90%"}
+rename_info <- data.frame(model = c("mle2_holling",
+                                    "gam_tp",
+                                    "scam_mpd"),
+                          newnm = c("Holling type 2",
+                                    "thin-plate GAM",
+                                    "monotone-decreasing\nGAM"))
+pf <- pred_frame |> right_join(rename_info, by = "model") |>
+  mutate(model = newnm |> factor(levels = rename_info$newnm))
 pred_plot <- function(var, data = pred_frame) {
     var <- enquo(var)
     gg0 <- ggplot(data, aes(Initial, prob)) +
@@ -193,13 +214,14 @@ pred_plot <- function(var, data = pred_frame) {
         expand_limits(y=0) +
         geom_point(data=dd, aes(y = Killed/Initial, size = Killed), alpha = 0.5) +
         facet_wrap(vars(!!var)) +
-        labs(x = "Initial density", y = "Predation probability") +
+        labs(x = "Initial density", y = "Predation probability\n(per capita)") +
         theme(legend.position = "none") +
         theme(panel.spacing = grid::unit(0.25, "lines"))
     return(gg0)
 }
-pred_plot(model, pf)
+pred_plot(model, pf) + zmargin
 ```
+
 
 ## goodness of fit
 
