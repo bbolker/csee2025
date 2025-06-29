@@ -204,7 +204,8 @@ rename_info <- data.frame(model = c("mle2_holling",
                           newnm = c("Holling type 2",
                                     "thin-plate GAM",
                                     "monotone-decreasing\nGAM"))
-pf <- pred_frame |> right_join(rename_info, by = "model") |>
+pf <- pred_frame |>
+  right_join(rename_info, by = "model") |>
   mutate(model = newnm |> factor(levels = rename_info$newnm))
 pred_plot <- function(var, data = pred_frame) {
     var <- enquo(var)
@@ -226,7 +227,12 @@ pred_plot(model, pf) + zmargin
 ## goodness of fit
 
 ```{r aictab1}
-rf2 <- rename(rf_aictab, ΔAIC = "AIC", Δnll = "nll")
+
+rf2 <- rf_aictab |>
+  mutate(across(model, ~ gsub(pattern = "/", replacement = "_", .))) |> 
+  full_join(rename_info, by = "model") |>
+  select(model = newnm, ΔAIC = "AIC", Δnegloglik = "nll", df) |>
+  mutate(across(model, ~ factor(., levels = rename_info$newnm)))
 pander::pander(rf2, digits = 2, justify = "lccc", keep.trailing.zeros = TRUE)
 ```
 
