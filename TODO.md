@@ -2,11 +2,8 @@
 
 ### cosmetic
 
-* rename models in AIC table 
-* improve captions for plotly figs
 * slide 5: cartoons of monononic/unimodal/convex/concave
 * pix, natural history background for reed frogs/red-eyed tree frogs (pred, prey)
-* improve reflist CSL, e.g. "Pya and Wood" vs "Pya et al"
 
 ### organizational
 

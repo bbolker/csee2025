@@ -3,6 +3,8 @@ title: "Shape-constrained models for functional responses"
 author: Ben Bolker
 date: ?? July 2025
 bibliography: shapeconst.bib
+nocite: |
+  @pyaShape2015 
 csl: reflist2.csl
 output:
   ioslides_presentation
@@ -145,7 +147,7 @@ gain precision without sacrificing realism and generality (?)
 * more specific/stronger constraints than "$f(x)$ is smooth"
 * e.g. $f(x)$ is monotonic, unimodal, convex, concave ...
 * e.g. @ramsayEstimating1998 (monotone), @munchBayesian2005, @andersenBayesian2017, @kollmannUnimodal2014
-* but especially @pyaShape2015 
+* but especially Pya and Wood (2015) <!-- hack with nocite rather than fixing CSL .. -->
 
 ## shape-constrained bases
 
@@ -285,7 +287,17 @@ knitr::include_graphics("pix/odo_plotly_RTMB_tecdv.png")
 
 ```{r odo-aic}
 L <- load("odo_stuff.rda")
-pander::pander(odo_aictab, digits = c(2, 2, 3, 2), justify = "lccc", keep.trailing.zeros = TRUE)
+rename_info_3d <- data.frame(model = c("mle2/rickerprop",
+                                    "gam/te",
+                                    "scam/tedecv"),
+                          newnm = c("Holling + Ricker/exponential",
+                                    "tensor-product GAM",
+                                    "decreasing × concave GAM"))
+odo_aictab2 <- odo_aictab |>
+  full_join(rename_info_3d, by = "model") |>
+  select(model = newnm, ΔAIC, Δnegloglik = "Δnll", df) |>
+  mutate(across(model, ~ factor(., levels = rename_info_3d$newnm)))
+pander::pander(odo_aictab2, digits = c(2, 2, 3, 2), justify = "lccc", keep.trailing.zeros = TRUE)
 ```
 
 ## conclusions

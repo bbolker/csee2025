@@ -61,13 +61,16 @@ seg_data <- function(x, zvar) {
 ## https://stackoverflow.com/questions/72281954/keep-other-columns-when-doing-group-by-summarise-with-dplyr
 ## https://stackoverflow.com/questions/50012328/r-plotly-showlegend-false-does-not-work
 odo_plotly_0 <- (plot_ly(x= ~initial, y = ~size, z = ~prop)
-    |> add_markers(data = x, marker = marker, showlegend = FALSE)
-    |> add_paths(data = seg_data(x, prop), , showlegend = FALSE)
-    |> hide_colorbar()
-    |> layout(scene = list(yaxis = list(rangemode = "tozero"),
-                           xaxis = list(rangemode = "tozero"),
-                           camera = list(eye = list(x = 2.5, y = 2, z = 1)),
-                           showlegend=FALSE))
+  |> add_markers(data = x, marker = marker, showlegend = FALSE)
+  |> add_paths(data = seg_data(x, prop), , showlegend = FALSE)
+  |> hide_colorbar()
+  |> layout(scene = list(
+              ## https://plotly.com/python/3d-axes/#set-axes-title
+              yaxis = list(rangemode = "tozero", title = list(text = "prey size")),
+              xaxis = list(rangemode = "tozero", title = list(text = "prey density")),
+              zaxis = list(title = list(text = "proportion predated")),
+            camera = list(eye = list(x = 2.5, y = 2, z = 1)),
+            showlegend=FALSE))
 )
 if (interactive()) print(odo_plotly_0)
 
