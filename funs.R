@@ -294,3 +294,41 @@ get_info <- function(fit, newdata = dd, init_dens = "N", killed = "killed", pred
     }
     tibble(AIC, nll, df)
 }
+
+predhack <- function(x, ...) {
+  UseMethod("predhack", x)
+}
+
+predhack.scam <- function(x, newparams,
+                          ## don't want to clash with apply's FUN arg
+                          PFUN = function(x, ...) x, pred.args = NULL, ...) {
+  attach(as.list(x))
+  on.exit(detach(as.list(x)))
+  coefficients <- coefficients.t <- newparams
+  coefficients.t[p.ident] <- pmax(1e-8, coefficients.t[p.ident])
+  coefficients[p.ident] <- log(coefficients.t[p.ident])
+  ## now copy modified params back into object
+  x$coefficients <- coefficients
+  x$coefficients.t <- coefficients.t
+  pp <- do.call(predict, c(list(x), pred.args))
+  PFUN(pp, ...)
+}
+
+predCI <- function(x, ...) {
+  UseMethod("predCI", x)
+}
+
+predCI.scam <- function(x, nsim = 1000, conf.level = 0.95, pdat, ...) {
+  Sigma <- x$Vp.t
+  mu <- x$coefficients.t
+  m <- MASS::mvrnorm(nsim, mu, Sigma)
+  preds <- apply(m, 1, predhack, x = x, pred.args = list(newdata = pdat), ...)
+  clevs <- c((1-conf.level)/2, (1+conf.level)/2)
+  if (is.matrix(preds)) {
+    bootci <- t(apply(preds, 1, quantile, clevs))
+  } else {
+    bootci <- quantile(preds, clevs)
+  }
+  bootci
+}
+

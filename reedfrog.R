@@ -110,8 +110,6 @@ m_RTMB3_mpd <- fit_mpd_fun(data = dd, response = "Killed",
                           inner.control = list(smartsearch=FALSE, maxit =1),
                           opt  = "BFGS")
 
-options(warn = 1)
-options(error = recover)
 m_RTMB4_mpd <- fit_mpd_fun(data = dd, response = "Killed",
                           size = dd$Initial, xvar = "Initial",
                           family = "binomial", random = "b1",
@@ -119,11 +117,6 @@ m_RTMB4_mpd <- fit_mpd_fun(data = dd, response = "Killed",
                           opt  = "nlminb")
 
 
-## all components except 3, 4 are effectively getting squashed to zero
-
-cbind(m_RTMB3_mpd$obj$env$last.par,
-      m_RTMB2_mpd$obj$env$last.par,
-      c(m_scam_mpd$beta, NA))
 
 m_RTMB_mpd$fit ## false convergence
 m_RTMB2_mpd$fit
@@ -164,6 +157,13 @@ preds_RTMB2_mpd <- rf_predfun(m_RTMB2_mpd,
                               inner.control = list(smartsearch=FALSE, maxit =1))
 
 m_scam_mpd <- scam(Killed ~ s(Initial, bs = "mpd"), data = ddx, family = binomial)
+
+## all components except 3, 4 are effectively getting squashed to zero
+
+cbind(m_RTMB3_mpd$obj$env$last.par,
+      m_RTMB2_mpd$obj$env$last.par,
+      c(m_scam_mpd$beta, NA))
+
 
 preds_scam_mpd <- pfun(m_scam_mpd)
 pp2 <- predict(m_scam_mpd, se.fit = TRUE, newdata = ddp0)
@@ -300,3 +300,16 @@ if (FALSE) {
     launch_shinystan(s1)
 }
 
+## handling time?
+## prob = a/(1 + a*h*x)
+## init slope = a
+## asymptote = 1/h
+## half-max = 1/(ah) ?
+## find init slope (maybe directly?) -> a
+## find half-max
+
+## don't think we can generally split f(x) into a(x), h(x) [underdetermined]
+
+get_ah <- function(pred, newdata) {
+}
+  
