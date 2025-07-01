@@ -314,15 +314,29 @@ predhack.scam <- function(x, newparams,
   PFUN(pp, ...)
 }
 
+predhack.gam <- function(x, newparams,
+                          ## don't want to clash with apply's FUN arg
+                          PFUN = function(x, ...) x, pred.args = NULL, ...) {
+  x$coefficients <- newparams
+  pp <- do.call(predict, c(list(x), pred.args))
+  PFUN(pp, ...)
+}
+
 predCI <- function(x, ...) {
   UseMethod("predCI", x)
 }
 
-predCI.scam <- function(x, nsim = 1000, conf.level = 0.95, pdat, ...) {
-  Sigma <- x$Vp.t
-  mu <- x$coefficients.t
+## applies to scam, gam (ugly)
+predCI.default <- function(x, nsim = 1000, conf.level = 0.95, pdat,
+                       pred.args = NULL, ...) {
+  Vnm <- if (inherits(x, "scam")) "Vp.t" else "Vp"
+  mnm <- if (inherits(x, "scam")) "coefficients.t" else "coefficients"
+  Sigma <- x[[Vnm]]
+  mu <- x[[mnm]]
   m <- MASS::mvrnorm(nsim, mu, Sigma)
-  preds <- apply(m, 1, predhack, x = x, pred.args = list(newdata = pdat), ...)
+  preds <- apply(m, 1, predhack, x = x,
+                 pred.args = c(list(newdata = pdat), pred.args), ...)
+  ## matplot(preds, type = "l", lty = 1)
   clevs <- c((1-conf.level)/2, (1+conf.level)/2)
   if (is.matrix(preds)) {
     bootci <- t(apply(preds, 1, quantile, clevs))

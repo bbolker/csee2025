@@ -3,7 +3,6 @@
 	title = {Shape constrained additive models},
 	volume = {25},
 	issn = {1573-1375},
-	url = {https://doi.org/10.1007/s11222-013-9448-7},
 	doi = {10.1007/s11222-013-9448-7},
 	abstract = {A framework is presented for generalized additive modelling under shape constraints on the component functions of the linear predictor of the GAM. We represent shape constrained model components by mildly non-linear extensions of P-splines. Models can contain multiple shape constrained and unconstrained terms as well as shape constrained multi-dimensional smooths. The constraints considered are on the sign of the first or/and the second derivatives of the smooth terms. A key advantage of the approach is that it facilitates efficient estimation of smoothing parameters as an integral part of model estimation, via GCV or AIC, and numerically robust algorithms for this are presented. We also derive simulation free approximate Bayesian confidence intervals for the smooth components, which are shown to achieve close to nominal coverage probabilities. Applications are presented using real data examples including the risk of disease in relation to proximity to municipal incinerators and the association between air pollution and health.},
 	language = {en},
@@ -103,7 +102,6 @@
 	title = {Partially {Specified} {Ecological} {Models}},
 	volume = {71},
 	issn = {1557-7015},
-	url = {https://onlinelibrary.wiley.com/doi/abs/10.1890/0012-9615%282001%29071%5B0001%3APSEM%5D2.0.CO%3B2},
 	doi = {10.1890/0012-9615(2001)071[0001:PSEM]2.0.CO;2},
 	abstract = {Models are useful when they are compared with data. Whether this comparison should be qualitative or quantitative depends on circumstances, but in many cases some statistical comparison of model and data is useful and enhances objectivity. Unfortunately, ecological dynamic models tend to contain assumptions and simplifications that enhance tractability, promote insight, but spoil model fit, and this can cause difficulties when adopting a statistical approach. Furthermore, the arcane numerical analysis required to fit dynamic models reliably presents an impediment to objective model testing by fitting. This paper presents methods for formulating and fitting partially specified models, which aim to achieve a measure of generality by avoiding some of the irrelevant incidental assumptions that are inevitable in more traditional approaches. This is done by allowing delay differential equation models, difference equation models, and differential equation models to be constructed with part of their structure represented by unknown functions, while part of the structure may contain conventional model elements that contain only unknown parameters. An integrated practical methodology for using such models is presented along with several examples, which include use of models formulated using delay differential equations, discrete difference equations/matrix models, ordinary differential equations, and partial differential equations. The methods also allow better estimation from ecological data by model fitting, since models can be formulated to include fewer unjustified assumptions than would usually be the case if more traditional models were used, while still including as much structure as the modeler believes can be justified by biological knowledge: model structure improves precision, while fewer extraneous assumptions reduce unquantifiable bias.},
 	language = {en},
@@ -244,14 +242,16 @@
 	number = {6},
 	journal = {Ecology},
 	author = {Vonesh, James R. and Bolker, Benjamin M.},
+  doi = {10.1890/04-0535},
 	year = {2005},
 	pages = {1580--1591},
 }
 
-@music{aday1978,
+@incollection{aday1978,
   author     = {Michael Lee Aday},
   title = {Two Out of Three Ain't Bad},
   booktitle = {Bat Out of Hell},
+  url = {https://www.youtube.com/watch?v=x7ES7ueI7p0&list=RDx7ES7ueI7p0&start_radio=1},
 date = {1978}
 }
 
@@ -392,7 +392,6 @@ date = {1978}
 	volume = {70},
 	copyright = {© 2014, The International Biometric Society},
 	issn = {1541-0420},
-	url = {https://onlinelibrary.wiley.com/doi/abs/10.1111/biom.12193},
 	doi = {10.1111/biom.12193},
 	abstract = {Research in the field of nonparametric shape constrained regression has been intensive. However, only few publications explicitly deal with unimodality although there is need for such methods in applications, for example, in dose–response analysis. In this article, we propose unimodal spline regression methods that make use of Bernstein–Schoenberg splines and their shape preservation property. To achieve unimodal and smooth solutions we use penalized splines, and extend the penalized spline approach toward penalizing against general parametric functions, instead of using just difference penalties. For tuning parameter selection under a unimodality constraint a restricted maximum likelihood and an alternative Bayesian approach for unimodal regression are developed. We compare the proposed methodologies to other common approaches in a simulation study and apply it to a dose–response data set. All results suggest that the unimodality constraint or the combination of unimodality and a penalty can substantially improve estimation of the functional relationship.},
 	language = {en},
@@ -423,4 +422,23 @@ date = {1978}
   keywords = {Bayesian confidence interval,generalized additive model (GAM),generalized cross validation (GCV),multiple smoothing parameters,penalized regression spline},
   note = {https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-842X.2006.00450.x},
   file = {/home/bolker/Documents/zotero_new/storage/HUSDKD8J/Wood - 2006 - On Confidence Intervals for Generalized Additive Models Based on Penalized Regression Splines.pdf}
+}
+
+@article{holecomparison2007,
+  title = {A Comparison of Approaches to Estimating Confidence Intervals for Willingness to Pay Measures},
+  author = {Hole, Arne Risa},
+  year = {2007},
+  month = aug,
+  journal = {Health Economics},
+  volume = {16},
+  number = {8},
+  pages = {827--840},
+  publisher = {John Wiley \& Sons, Ltd},
+  issn = {1099-1050},
+  doi = {10.1002/hec.1197},
+  urldate = {2022-10-05},
+  abstract = {This paper describes four approaches to estimating confidence intervals for willingness to pay measures: the delta, Fieller, Krinsky Robb and bootstrap methods. The accuracy of the various methods is...},
+  langid = {english},
+  note = {https://onlinelibrary.wiley.com/doi/10.1002/hec.1197},
+  file = {/home/bolker/Documents/zotero_new/storage/NPSLLDGR/hec.html}
 }

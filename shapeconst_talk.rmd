@@ -1,13 +1,14 @@
 ---
 title: "Shape-constrained models for functional responses"
 author: Ben Bolker
-date: ?? July 2025
+date: 7 July 2025
 bibliography: shapeconst.bib
+logo: m24-col-square.png
 nocite: |
   @pyaShape2015 
 csl: reflist2.csl
 output:
-  ioslides_presentation
+  powerpoint_presentation
 citation-package: biblatex
 header-includes:
 - \usepackage[authordate, backend=biber]{biblatex-chicago}
@@ -25,6 +26,8 @@ header-includes:
 - \newcommand{\bzero}{\boldsymbol 0}
 ---
 
+<!-- convert m24-col.png -gravity center -background transparent -extent 100x200% out.png -->
+
 <!-- https://stackoverflow.com/questions/30900006/r-markdonw-ioslides-title-page-format-changes -->
 
 <style>
@@ -37,8 +40,11 @@ h2 {
 h3 { 
  color: #3399ff;		
 }
+<!-- https://audhalbritter.com/rmarkdown-title-page-picture/ -->
 .title-slide {
-   background-color: #55bbff;
+  background-color: #55bbff;
+  background-image: url('m24-col.png');
+  background-size: 100% 100%;
 }
 
 .pre {
@@ -75,7 +81,7 @@ library(tidyverse)
 
 ## modeling tradeoffs
 
-@levinsStrategy1966: modelers face a tradeoff among **realism**, **precision**, and **generality**
+tradeoff between **realism**, **precision**, and **generality** [@levinsStrategy1966]
 
 * realism and precision  
 [engineering: **tactical** models]
@@ -99,7 +105,7 @@ see also @aday1978
 - precise, more realistic, less general
 - interpretable/testable parameters
 - often have to select among many options
-- induce specific (implicit) assumptions about curve shape
+- make specific (implicit) assumptions about curve shape
 
 ```{r, eval = FALSE}
 par(mfrow=c(1,2), las = 1, bty = "l")
@@ -145,7 +151,11 @@ gain precision without sacrificing realism and generality (?)
 ## shape-constrained models
 
 * more specific/stronger constraints than "$f(x)$ is smooth"
-* e.g. $f(x)$ is monotonic, unimodal, convex, concave ...
+* e.g. $f(x)$ is 
+   * monotonic (increasing/decreasing)
+   * unimodal ("hump-shaped")
+   * convex/concave
+   * etc.
 * e.g. @ramsayEstimating1998 (monotone), @munchBayesian2005, @andersenBayesian2017, @kollmannUnimodal2014
 * but especially Pya and Wood (2015) <!-- hack with nocite rather than fixing CSL .. -->
 
@@ -300,18 +310,49 @@ odo_aictab2 <- odo_aictab |>
 pander::pander(odo_aictab2, digits = c(2, 2, 3, 2), justify = "lccc", keep.trailing.zeros = TRUE)
 ```
 
-## conclusions
+## what about inference?
 
-* Acknowledgements
-    * "shoulders of giants" (Wood [`mgcv`], Pya [`scam`], Kristensen [`RTMB`])
-	* data providers (Mike McCoy, James Vonesh)
-	* $$ (NSERC Discovery)
-* Source: https://github.com/bbolker/isec2024
-* Future goals
-    * shape-constrained smooths as 'plug and play' components of more complex models
-    * fix `scam` bugs/robustify `RTMB` fitting
-    * more constraint options (e.g. unimodal functions)
-    * hypothesis testing ...
+* big complaint about GAMs: uninterpretable parameters!
+* can get CIs for anything we want by resampling parameters [@holecomparison2007;@woodConfidence2006c]
+* e.g. from 1D example: $a$ = predicted predation probability at density 0; $h$ = average slope of (1/probability)
+
+```{r ci, fig.width = 8, fig.height = 4, out.width = "80%"}
+c2 <- coef_frame |>
+  full_join(rename_info, by = "model") |>
+  select(model = newnm, term, est, lwr, upr) |>
+  mutate(across(model, ~ factor(., levels = rename_info$newnm)),
+         across(term, ~factor(., levels = c("a", "h"),
+                              labels = c("attack rate", "handling time (days)"))))
+  
+ggplot(c2, aes(est, model, xmin = lwr, xmax = upr)) +
+  geom_pointrange() +
+  facet_wrap(~term, scale = "free_x") + zmargin +
+  labs(y="", x= "")
+```
+
+## Conclusions
+
+### Future
+
+* other applications (thermal response curves)
+* semimechanistic (`RTMB`) fits
+* other constraint options (e.g. unimodal functions)
+* hypothesis testing ...
+
+### Acknowledgements
+
+* giant shoulders (Wood [`mgcv`], Pya [`scam`], Kristensen [`RTMB`])
+* data providers (McCoy, Vonesh)
+* $$ (NSERC Discovery)
+
+## Source
+
+https://github.com/bbolker/csee2025
+
+```{r qrcode, out.width = "90%"}
+library("qrcode")
+plot(qr_code("https://www.math.mcmaster.ca/bolker/misc/csee2025_shapeconst.html"))
+```
 
 <!-- https://bookdown.org/yihui/rmarkdown-cookbook/multi-column.html -->
 
@@ -336,23 +377,3 @@ pander::pander(odo_aictab2, digits = c(2, 2, 3, 2), justify = "lccc", keep.trail
 <!-- https://stackoverflow.com/questions/28815781/how-to-move-the-bibliography-in-markdown-pandoc/44546963#44546963 -->
 
 ## references {#refs .refs .columns-2 .pre}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

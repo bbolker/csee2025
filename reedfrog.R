@@ -310,12 +310,66 @@ if (FALSE) {
 
 ## don't think we can generally split f(x) into a(x), h(x) [underdetermined]
 
+## prob = a/(1+a*h*x)
+## 1/prob = 1/a + hx
+## so h == average slope of 1/x
+
+## a = intercept/value at 0
 a <- 2
 h <- 1
-x <- 1:20
+x <- 0:20
 pred <- a/(1+a*h*x)
 
-get_ah <- function(pred, newdata) {
-  a_est <- 
+get_ah <- function(pred, dx = 1) {
+  a_est <- pred[1]
+  h_est <- mean(diff(1/pred))*dx
+  c(a= unname(a_est), h = h_est)
 }
-  
+
+get_ah(pred, data.frame(x=x))  
+
+ddp1 <- data.frame(Initial = 0:100) ## important to start from 0
+
+## testing
+m0 <- predCI(m_scam_mpd, pdat = ddp0, pred.args = list(type = "response"))
+matplot(m0, type = "l")
+
+r2c <- tibble::rownames_to_column
+
+get_pred_ah <- function(x, scale  = FALSE) {
+  p <- predict(x, newdata = ddp1, type = "response")
+  get_ah(p)
+}
+
+## conf intervals on attack rate/handling time
+ci_scam_mpd <- predCI(m_scam_mpd, pdat = ddp0,
+                      pred.args = list(type = "response"),
+             PFUN = get_ah) |>
+  as.data.frame() |>
+  r2c("term") |>
+  setNames(c("term", "lwr", "upr")) |>
+  mutate(est = get_pred_ah(m_scam_mpd))
+
+ci_mle2_holling <- confint(m_mle2_holling) |>
+  as.data.frame() |>
+  r2c("term") |>
+  setNames(c("term", "lwr", "upr")) |>
+  mutate(across(term, ~ gsub(pattern = "^log", replacement = "", .)),
+         across(c(lwr, upr), exp),
+         est = exp(coef(m_mle2_holling)))
+
+
+ci_gam_tp <- predCI(m_gam_tp, pdat = ddp0, pred.args = list(type = "response"),
+             PFUN = get_ah) |>
+  as.data.frame() |>
+  r2c("term") |>
+  setNames(c("term", "lwr", "upr")) |>
+  mutate(est = get_pred_ah(m_gam_tp))
+
+coef_frame <- tibble::lst(ci_scam_mpd, ci_mle2_holling, ci_gam_tp) |>
+  bind_rows(.id = "model") |>
+  mutate(across(model, ~ gsub(pattern = "ci_", replacement = "", .)))
+
+## add estimates
+## draw plot
+save("dd", "coef_frame", "pred_plot", "pred_frame", "rf_aictab", file = "reedfrog_stuff.rda")
