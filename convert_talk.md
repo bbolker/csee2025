@@ -13,7 +13,7 @@ https://peter.sh/experiments/chromium-command-line-switches/
 2. Convert PDF to PNG:
 
 ```
-DENSITY=450 ## too ambitious?
+DENSITY=300 ## 
 convert -density $DENSITY output.pdf output-%d.png
 ```
 
@@ -26,11 +26,13 @@ convert original.png -fill red -draw "$(convert original.png -format 'rectangle 
 
 
 ```
-export N=0
-## try to match gradient at bottom of screen ...
-convert output-${N}.png \
-  -fill gray92 -draw "$(convert output-${N}.png -format 'rectangle 0,%[fx:h] 800,%[fx:h-200]' info:)"  \
-output-${N}-proc.png
+for N in {0..18}; do
+   ## try to match gradient at bottom of screen ...
+   convert output-${N}.png \
+     -fill gray92 -draw "$(convert output-${N}.png -format 'rectangle 0,%[fx:h] 800,%[fx:h-200]' info:)"  \
+   output-${N}-proc.png
+   mv output-${N}-proc.png output-${N}.png
+done
 ```
 
 Non-working machinery from link:
