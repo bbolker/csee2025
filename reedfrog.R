@@ -310,6 +310,12 @@ if (FALSE) {
 
 ## don't think we can generally split f(x) into a(x), h(x) [underdetermined]
 
+a <- 2
+h <- 1
+x <- 1:20
+pred <- a/(1+a*h*x)
+
 get_ah <- function(pred, newdata) {
+  a_est <- 
 }
   
