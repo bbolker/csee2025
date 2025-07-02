@@ -252,3 +252,54 @@ img(odo_plotly_RTMB_sm)
 ##   ## hS ~ dunif(-1,1) 
 ##   c ~ dlnorm(0,0.01)
 
+### Method 1: use fit_mpd_fun. Do not use Laplace approx
+
+## fit *without* Laplace but with fixed 
+ff <- function(log_smSD = -1, pred_data = ddp) {
+  f0 <- fit_mpd_fun(data = x2[c("killed", "Size", "initial")],
+              response = "killed",
+              xvar = c("Size", "initial"),
+              form = s(size, initial, bs = "tesmd2"),
+              size = x2$initial,
+              family = "binomial",
+              opt = "BFGS",
+              start = list(b0 = -2, log_smSD = log_smSD),
+              random = NULL,
+              map = list(log_smSD = factor(NA)))
+  cat("NLL: ", f0$obj$fn(), "\n")
+
+  pp <- f0$obj$env$last.par.best
+  pp <- split(pp, names(pp)) ## for [[]]-assignment
+  
+  f1 <- fit_mpd_fun(data = pred_data,
+                    size = pred_data[[init_dens]],
+                    response = "killed",
+                    xvar = c("Size", "initial"),
+                    form = s(size, initial, bs = "tesmd2"),
+                    family = "binomial",
+                    opt = "BFGS",
+                    start = list(b0 = -2, log_smSD = log_smSD),
+                    predict = TRUE,
+                    random = NULL,
+                    parm = pp)
+}
+
+pfun <- function(x, pred_data = ddp) {
+  ## reshape as needed for persp
+  pred_data$prop <- split(x, x$nm)[["mu"]][,"value"]
+  pred_data <- pred_data[is.na(pred_data$killed),] |>
+    dplyr::arrange(initial, Size) |>
+    dplyr::select(-killed)
+  x <- unique(pred_data$Size)
+  y <- unique(pred_data$initial)
+  z <- matrix(pred_data$prop, length(x), length(y))
+  ## persp(x, y, z)
+  rgl::persp3d(x, y, z, col = "gray")
+}
+
+if (FALSE) {
+  ## slow (because of TMB::sdreport)
+  pred1 <- ff(2)
+  pred2 <- ff(4)
+  pfun(pred2)
+}

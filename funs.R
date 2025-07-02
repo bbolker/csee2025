@@ -144,16 +144,17 @@ fit_mpd_fun <- function(data,
     ## p0 <- parms[names(parms) != "b1"]
     ## optim(par = p0, fn = obj$fn, control = list(maxit = 2000))
     if (predict) {
-        ## shouldn't need to map() b since we are using best-fit  if random = NULL ?
-        if (!is.null(random)) parms <- parms[setdiff(names(parms), random)]
-        obj$fn(unlist(parms))
-        if (se.fit) {
-            sdr <- sdreport(obj)
-            return(with(sdr,
-                        data.frame(nm = names(value), value, sd)))
-        } else {
-          stop("not implemented")
-        }
+      ## shouldn't need to map() b since we are using best-fit  if random = NULL ?
+      if (!is.null(random)) parms <- parms[setdiff(names(parms), random)]
+      ## assume that any mapped parameters are completely excluded (all-NA) ...
+      obj$fn(unlist(parms[setdiff(names(parms), names(obj$env$map))]))
+      if (se.fit) {
+        sdr <- sdreport(obj)
+        return(with(sdr,
+                    data.frame(nm = names(value), value, sd)))
+      } else {
+        stop("not implemented")
+      }
     }
     res <- with(obj,
                 switch(opt,
