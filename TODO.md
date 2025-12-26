@@ -1,5 +1,19 @@
 ## new
 
+* reorganize into a new project
+* alternatives for shape constraints, specifically issue of TMB's inner-optimization Newton-Raphson failing on rank-deficient/NPD Hessians (when constraints are binding/log-scale coefficients go to -∞)
+   * regular old non-penalized splines?
+   * hack TMB's N-R code to do something SVD-ish/generalized inverses? (check `smartsearch` again?)
+   * use F Dupont's trick - penalties instead of constraint?
+* unimodal curves
+   * Dupont (constrain positive/negative before/after a known knot)
+   * go back to Gaussian process with constrained scale (S. Munch trick)?
+   * ??
+* need simple test cases!
+
+
+## OLD, from CSEE 2025
+
 ### cosmetic
 
 * slide 5: cartoons of monononic/unimodal/convex/concave
@@ -18,7 +32,7 @@
 * `mgcv::vcov.gam(m_scam_mpd)` (maybe dangerous, don't know about transformations?)
 
 
-## to do (OLD, from ISEC 2024)
+## OLD, from ISEC 2024
 
 ###  cosmetic
 
