@@ -1,5 +1,11 @@
 ## new
 
+* Dupont penalty:
+
+-min(x, 0)  approx 1/rho log(1+exp(-rho x))
+
+rho controls smoothness (Dupont et al use rho = 20)
+
 ### cosmetic
 
 * slide 5: cartoons of monononic/unimodal/convex/concave
